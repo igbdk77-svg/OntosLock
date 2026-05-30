@@ -19,11 +19,16 @@ class AdaptiveOntologicalLock:
 
     def _normalize(self, x):
         """Helper to normalize vectors to unit length."""
+        # Ensure x is 2D for consistent behavior
+        if x.ndim == 1:
+            x = x.reshape(1, -1)
+        
         norm = np.linalg.norm(x, axis=-1, keepdims=True)
         return x / (norm + 1e-9)
 
     def get_dynamic_target(self, h_curr):
         """Finds the optimal safe target in the DRM using k-NN."""
+        # Ensure h_curr is 1D for query
         h_norm = self._normalize(h_curr.reshape(1, -1)).flatten()
         dists, idxs = self.tree.query(h_norm, k=self.k)
         
@@ -38,9 +43,16 @@ class AdaptiveOntologicalLock:
         """
         Main inference function: Applies cubic damping to drift inputs.
         """
+        # Store original norm for later restoration
+        original_norm = np.linalg.norm(h_curr)
+        
+        # Normalize current input
         h_norm = self._normalize(h_curr.reshape(1, -1)).flatten()
+        
+        # Get target from safe manifold
         h_target = self.get_dynamic_target(h_norm)
         
+        # Calculate distance to target
         dist = np.linalg.norm(h_norm - h_target)
         
         # Apply Cubic Damping if deviation exceeds epsilon
@@ -51,7 +63,9 @@ class AdaptiveOntologicalLock:
             
             # Apply EMA smoothing for stability
             h_final = (1 - self.smoothing) * h_norm + self.smoothing * h_corrected
-            return h_final * np.linalg.norm(h_curr)
+            
+            # Normalize and restore original magnitude
+            h_final = self._normalize(h_final.reshape(1, -1)).flatten()
+            return h_final * original_norm
         
         return h_curr
-          
