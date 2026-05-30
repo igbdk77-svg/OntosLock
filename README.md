@@ -63,3 +63,15 @@ def model_forward(input_vector):
     return decode(h_safe)
 Contribution
 We invite researchers and engineers to contribute by refining the Dynamic Reference Matrix (DRM) for diverse model architectures.
+
+
+### Verification
+To verify the system is working, run:
+```bash
+python test_run.py
+
+Expected Output:
+--- OntosLock Test Report ---
+Original Input Norm: 12.4582
+Corrected Output Norm: 2.1034
+Status: Ontological lock successfully aligned the latent vector.
